@@ -88,14 +88,17 @@ const loginUser = async (req, res, next) => {
     const user = await User.findOne({ email }).select('+password');
 
     if (user && (await user.matchPassword(password))) {
+      // Check if this is a demo account to bypass verification
+      const isDemoAccount = ['user@demo.com', 'provider@demo.com', 'admin@demo.com'].includes(user.email);
+
       // Check if email is verified
-      if (!user.isEmailVerified) {
+      if (!user.isEmailVerified && !isDemoAccount) {
         res.status(401);
         throw new Error('Please verify your email before logging in. Check your inbox.');
       }
 
-      // Check if OTP was verified within the last 7 days
-      if (user.lastOtpVerifiedAt && Date.now() - user.lastOtpVerifiedAt.getTime() < 7 * 24 * 60 * 60 * 1000) {
+      // Check if OTP was verified within the last 7 days or if it's a demo account
+      if (isDemoAccount || (user.lastOtpVerifiedAt && Date.now() - user.lastOtpVerifiedAt.getTime() < 7 * 24 * 60 * 60 * 1000)) {
         // Skip OTP and login directly
         res.json({
           success: true,
