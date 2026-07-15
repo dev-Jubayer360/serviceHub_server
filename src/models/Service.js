@@ -26,6 +26,9 @@ const serviceSchema = new mongoose.Schema(
     duration: {
       type: String, // e.g. '2 Hours'
     },
+    location: {
+      type: String,
+    },
     locationCoverage: {
       type: String,
       enum: ['Anywhere in City', 'Specific Areas', 'My Workshop Only'],

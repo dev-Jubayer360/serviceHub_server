@@ -23,7 +23,7 @@ const getServices = async (req, res, next) => {
     }
 
     if (location) {
-      query.locationCoverage = { $regex: location, $options: 'i' };
+      query.location = { $regex: location, $options: 'i' };
     }
 
     if (minPrice || maxPrice) {
