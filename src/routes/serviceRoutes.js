@@ -4,7 +4,8 @@ const {
   getService,
   createService,
   updateService,
-  deleteService
+  deleteService,
+  getPublicStats
 } = require('../controllers/serviceController');
 
 const { protect, authorize } = require('../middleware/authMiddleware');
@@ -14,6 +15,8 @@ const reviewRouter = require('./reviewRoutes');
 const router = express.Router();
 
 router.use('/:serviceId/reviews', reviewRouter);
+
+router.route('/stats/public').get(getPublicStats);
 
 router.route('/')
   .get(getServices)

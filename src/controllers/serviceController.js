@@ -153,10 +153,44 @@ const deleteService = async (req, res, next) => {
   }
 };
 
+// @desc    Get public statistics for landing page
+// @route   GET /api/services/stats/public
+// @access  Public
+const getPublicStats = async (req, res, next) => {
+  try {
+    const User = require('../models/User');
+    const Booking = require('../models/Booking');
+    const Review = require('../models/Review');
+
+    const verifiedProviders = await User.countDocuments({ role: 'provider' });
+    const availableServices = await Service.countDocuments({});
+    const completedBookings = await Booking.countDocuments({ status: 'completed' });
+    
+    // Calculate average rating of all approved reviews
+    const reviews = await Review.find({ status: 'Approved' });
+    const averageRating = reviews.length > 0 
+      ? (reviews.reduce((acc, item) => item.rating + acc, 0) / reviews.length).toFixed(1)
+      : 0;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        verifiedProviders,
+        availableServices,
+        completedBookings,
+        averageRating
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getServices,
   getService,
   createService,
   updateService,
-  deleteService
+  deleteService,
+  getPublicStats
 };
