@@ -52,8 +52,17 @@ const createReview = async (req, res, next) => {
     // Update service rating
     const allReviews = await Review.find({ serviceId, status: 'Approved' });
     service.numOfReviews = allReviews.length;
-    service.rating = allReviews.reduce((acc, item) => item.rating + acc, 0) / allReviews.length;
+    service.rating = allReviews.length > 0 ? allReviews.reduce((acc, item) => item.rating + acc, 0) / allReviews.length : 0;
     await service.save();
+
+    // Update provider rating
+    const User = require('../models/User');
+    const providerReviews = await Review.find({ providerId: service.provider, status: 'Approved' });
+    const provider = await User.findById(service.provider);
+    if (provider) {
+      provider.rating = providerReviews.length > 0 ? providerReviews.reduce((acc, item) => item.rating + acc, 0) / providerReviews.length : 0;
+      await provider.save();
+    }
 
     res.status(201).json({
       success: true,
@@ -146,17 +155,28 @@ const updateReviewStatus = async (req, res, next) => {
       // If status changed to or from Approved, recalculate service rating
       if (oldStatus !== status && (oldStatus === 'Approved' || status === 'Approved')) {
         const service = await Service.findById(review.serviceId);
-        const approvedReviews = await Review.find({ serviceId: review.serviceId, status: 'Approved' });
-        
-        service.numOfReviews = approvedReviews.length;
-        if (service.numOfReviews === 0) {
-          service.rating = 0;
-        } else {
-          service.rating =
-            approvedReviews.reduce((acc, item) => item.rating + acc, 0) /
-            approvedReviews.length;
+        if (service) {
+          const approvedReviews = await Review.find({ serviceId: review.serviceId, status: 'Approved' });
+          
+          service.numOfReviews = approvedReviews.length;
+          if (service.numOfReviews === 0) {
+            service.rating = 0;
+          } else {
+            service.rating =
+              approvedReviews.reduce((acc, item) => item.rating + acc, 0) /
+              approvedReviews.length;
+          }
+          await service.save();
+
+          // Update provider rating
+          const User = require('../models/User');
+          const providerReviews = await Review.find({ providerId: service.provider, status: 'Approved' });
+          const provider = await User.findById(service.provider);
+          if (provider) {
+            provider.rating = providerReviews.length > 0 ? providerReviews.reduce((acc, item) => item.rating + acc, 0) / providerReviews.length : 0;
+            await provider.save();
+          }
         }
-        await service.save();
       }
 
       res.json({
@@ -219,17 +239,28 @@ const deleteReview = async (req, res, next) => {
 
       if (status === 'Approved') {
         const service = await Service.findById(serviceId);
-        const approvedReviews = await Review.find({ serviceId, status: 'Approved' });
-        
-        service.numOfReviews = approvedReviews.length;
-        if (service.numOfReviews === 0) {
-          service.rating = 0;
-        } else {
-          service.rating =
-            approvedReviews.reduce((acc, item) => item.rating + acc, 0) /
-            approvedReviews.length;
+        if (service) {
+          const approvedReviews = await Review.find({ serviceId, status: 'Approved' });
+          
+          service.numOfReviews = approvedReviews.length;
+          if (service.numOfReviews === 0) {
+            service.rating = 0;
+          } else {
+            service.rating =
+              approvedReviews.reduce((acc, item) => item.rating + acc, 0) /
+              approvedReviews.length;
+          }
+          await service.save();
+
+          // Update provider rating
+          const User = require('../models/User');
+          const providerReviews = await Review.find({ providerId: service.provider, status: 'Approved' });
+          const provider = await User.findById(service.provider);
+          if (provider) {
+            provider.rating = providerReviews.length > 0 ? providerReviews.reduce((acc, item) => item.rating + acc, 0) / providerReviews.length : 0;
+            await provider.save();
+          }
         }
-        await service.save();
       }
 
       res.json({

@@ -140,6 +140,17 @@ const updateBookingStatus = async (req, res, next) => {
 
     await booking.save();
 
+    // Update provider completed jobs count
+    if (status) {
+      const User = require('../models/User');
+      const completedCount = await Booking.countDocuments({ provider: booking.provider, status: 'completed' });
+      const provider = await User.findById(booking.provider);
+      if (provider) {
+        provider.completedJobs = completedCount;
+        await provider.save();
+      }
+    }
+
     res.status(200).json({
       success: true,
       data: booking
