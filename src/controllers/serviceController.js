@@ -6,7 +6,7 @@ const Category = require('../models/Category');
 // @access  Public
 const getServices = async (req, res, next) => {
   try {
-    const { category, search, location, minPrice, maxPrice, providerId } = req.query;
+    const { category, search, location, minPrice, maxPrice, providerId, minRating } = req.query;
     let query = { isActive: true };
 
     if (providerId) {
@@ -23,13 +23,17 @@ const getServices = async (req, res, next) => {
     }
 
     if (location) {
-      query.locationCoverage = location;
+      query.locationCoverage = { $regex: location, $options: 'i' };
     }
 
     if (minPrice || maxPrice) {
       query.price = {};
       if (minPrice) query.price.$gte = Number(minPrice);
       if (maxPrice) query.price.$lte = Number(maxPrice);
+    }
+    
+    if (minRating) {
+      query.rating = { $gte: Number(minRating) };
     }
 
     const services = await Service.find(query)
