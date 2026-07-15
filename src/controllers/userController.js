@@ -373,6 +373,43 @@ const updateUserRole = async (req, res, next) => {
   }
 };
 
+// @desc    Update provider verification status (Admin only)
+// @route   PATCH /api/user/:id/verify-provider
+// @access  Private/Admin
+const updateProviderStatus = async (req, res, next) => {
+  try {
+    const { isVerifiedProvider } = req.body;
+    
+    const user = await User.findById(req.params.id);
+
+    if (user) {
+      if (user.role !== 'provider') {
+        res.status(400);
+        throw new Error('User is not a provider');
+      }
+
+      user.isVerifiedProvider = isVerifiedProvider;
+      await user.save();
+
+      res.json({
+        success: true,
+        message: 'Provider verification status updated successfully',
+        data: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          isVerifiedProvider: user.isVerifiedProvider
+        },
+      });
+    } else {
+      res.status(404);
+      throw new Error('User not found');
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Get all active providers
 // @route   GET /api/user/providers
 // @access  Public
@@ -440,6 +477,7 @@ module.exports = {
   getUserDashboardStats,
   getAllUsers,
   updateUserRole,
+  updateProviderStatus,
   getProviders,
   requestProvider,
 };

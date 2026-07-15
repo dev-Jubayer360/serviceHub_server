@@ -14,6 +14,7 @@ const {
   getUserDashboardStats,
   getAllUsers,
   updateUserRole,
+  updateProviderStatus,
   getProviders,
   requestProvider,
 } = require('../controllers/userController');
@@ -29,6 +30,7 @@ router.post('/request-provider', requestProvider);
 // Admin only routes
 router.route('/all').get(authorize('admin'), getAllUsers);
 router.route('/:id/role').patch(authorize('admin'), updateUserRole);
+router.route('/:id/verify-provider').patch(authorize('admin'), updateProviderStatus);
 
 router.route('/dashboard-stats').get(getUserDashboardStats);
 
