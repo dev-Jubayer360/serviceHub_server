@@ -31,6 +31,42 @@ const getAdminDashboardStats = async (req, res, next) => {
       .limit(5)
       .select('name image rating completedJobs');
 
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    // User Growth Aggregation
+    const userGrowthRaw = await User.aggregate([
+      {
+        $group: {
+          _id: { month: { $month: "$createdAt" }, year: { $year: "$createdAt" } },
+          users: { $sum: 1 }
+        }
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1 } },
+      { $limit: 12 }
+    ]);
+    const userGrowth = userGrowthRaw.map(item => ({
+      name: months[item._id.month - 1],
+      users: item.users
+    }));
+
+    // Booking Analytics Aggregation
+    const bookingAnalyticsRaw = await Booking.aggregate([
+      {
+        $group: {
+          _id: { month: { $month: "$createdAt" }, year: { $year: "$createdAt" } },
+          bookings: { $sum: 1 },
+          revenue: { $sum: "$totalAmount" }
+        }
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1 } },
+      { $limit: 12 }
+    ]);
+    const bookingAnalytics = bookingAnalyticsRaw.map(item => ({
+      name: months[item._id.month - 1],
+      bookings: item.bookings,
+      revenue: item.revenue
+    }));
+
     res.json({
       success: true,
       data: {
@@ -41,7 +77,9 @@ const getAdminDashboardStats = async (req, res, next) => {
         totalRevenue,
         recentBookings,
         recentActivities,
-        topProviders
+        topProviders,
+        userGrowth,
+        bookingAnalytics
       },
     });
   } catch (error) {
